@@ -13,6 +13,7 @@ This github repository is for project battle bot
 
 * **Brandon Abbenhuis** - *moet nog ingevuld* - [brann0n](https://github.com/brann0n)
 * **Harm Smit** - *moet nog ingevuld* - [HarmSmit1](https://github.com/HarmSmit1)
+* **Bart Wijshake** - *moet nog ingevuld* - [BartWijshake](https://github.com/BartWijshake)
 
 ## Acknowledgments
 
