@@ -17,5 +17,3 @@ This github repository is for project battle bot
 ## Acknowledgments
 
 * to be added
-
-* HarmSmit1
