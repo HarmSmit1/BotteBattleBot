@@ -12,6 +12,7 @@ This github repository is for project battle bot
 ## Authors
 
 * **Brandon Abbenhuis** - *moet nog ingevuld* - [brann0n](https://github.com/brann0n)
+* **Harm Smit** - *moet nog ingevuld* - [HarmSmit1](https://github.com/HarmSmit1)
 
 ## Acknowledgments
 
