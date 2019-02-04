@@ -17,3 +17,4 @@ This github repository is for project battle bot
 
 * to be added
 
+* HarmSmit1
