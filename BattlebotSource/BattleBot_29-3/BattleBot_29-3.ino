@@ -122,7 +122,7 @@ void setup()
 
     // Start Serial communication.
     Serial.begin(38400);
-    bluetouthSerial.begin(38400);
+    bluetouthSerial.begin(115200);
 
     // Start the gyroscope and accelerometer.
     Wire.begin();
@@ -233,34 +233,61 @@ void updateSecondLCDCommand( String secondCurrentCommand )
 void followLineProgram()
 {
   TapeDetected onSensor = detectTape();
-  /*long int distanceToObject = sonar.ping_cm();
-
-  if( distanceToObject < 15 && distanceToObject > 0 )
-  {
-      updateSecondLCDCommand( "End");
-      overrideCommand( 15, 0 );
-  }
-*/
   switch( onSensor )
     {
         case RIGHT_SENSOR:
             updateSecondLCDCommand( "Tape right" );
-            battleBotDrive.drive( -80, 50 ); //use 10 everywhere for perfect parkour
+            battleBotDrive.drive( -45, 30 ); //use 10 everywhere for perfect parkour
             break;
 
         case LEFT_SENSOR:
             updateSecondLCDCommand( "Tape left" );
-            battleBotDrive.drive( 50, -80 ); //use 10 everywhere for perfect parkour
+            battleBotDrive.drive( 30, -45 ); //use 10 everywhere for perfect parkour
             break;
 
         case BOTH_SENSOR:
             updateSecondLCDCommand( "Tape both" );
-            battleBotDrive.drive( 50, -80 );
+            battleBotDrive.drive( 30, -45 );
             break;
 
         case NON_SENSOR:
             updateSecondLCDCommand( "No tape" );
-            battleBotDrive.drive( -60, -60 );
+            battleBotDrive.drive( -30, -30 );
+            break;
+
+        default:
+            break;
+    }
+}
+
+/**
+ * This function lets the bot avoid the tape on the ground
+ */
+void avoidLineProgram()
+{
+  TapeDetected onSensor = detectTape();
+  switch( onSensor )
+    {
+        case LEFT_SENSOR:
+            updateSecondLCDCommand( "Tape right" );
+            battleBotDrive.drive( -100, 100 ); //use 10 everywhere for perfect parkour
+            break;
+
+        case RIGHT_SENSOR:
+            updateSecondLCDCommand( "Tape left" );
+            battleBotDrive.drive( 100, -100 ); //use 10 everywhere for perfect parkour
+            break;
+
+        case BOTH_SENSOR:
+            updateSecondLCDCommand( "Tape both" );
+            battleBotDrive.drive( 50, 50 ); //backwards and turn around
+            delay(200);
+            battleBotDrive.drive(-100, 100);
+            break;
+
+        case NON_SENSOR:
+            updateSecondLCDCommand( "No tape" );
+            battleBotDrive.drive( -20, -120 );
             break;
 
         default:
@@ -285,6 +312,7 @@ void overrideCommand( int command, int argument )
 void loop()
 {
     followLineProgram();  
+    //avoidLineProgram();
     //sendVelocity();
     //listenForBluetouthCommands();
     //executeCommand();
