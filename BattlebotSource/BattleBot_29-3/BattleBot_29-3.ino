@@ -236,7 +236,7 @@ void followLineProgram()
 }
 void followLineProgram2()
 {
-    
+
     TapeDetected onSensor = detectTape();
 
     switch (onSensor)
@@ -245,6 +245,7 @@ void followLineProgram2()
         updateSecondLCDCommand("Tape right");
         battleBotDrive.drive(-20, 50); //use 10 everywhere for perfect parkour
         break;
+
     case LEFT_SENSOR:
         updateSecondLCDCommand("Tape left");
         battleBotDrive.drive(50, -20); //use 10 everywhere for perfect parkour
@@ -266,7 +267,6 @@ void followLineProgram2()
 }
 void followLineProgram3()
 {
-    
     TapeDetected onSensor = detectTape();
 
     switch (onSensor)
@@ -327,7 +327,43 @@ void avoidLineProgram()
         break;
     }
 }
+void avoidLineProgram2()
+{
 
+    TapeDetected onSensor = detectTape();
+
+    switch (onSensor)
+    {
+    case LEFT_SENSOR:
+        updateSecondLCDCommand("Tape left"); //so going right
+        //battleBotDrive.drive(-5, 10);
+        battleBotDrive.drive(20, 20);
+        delay(200);
+        battleBotDrive.drive(-20, 40);
+        delay(200);
+        break;
+
+    case RIGHT_SENSOR:
+        updateSecondLCDCommand("Tape right"); //so going left
+        battleBotDrive.drive(10, -5);
+        break;
+
+    case BOTH_SENSOR:
+        updateSecondLCDCommand("Tape both");
+        battleBotDrive.drive(20, 20);
+        delay(300);
+        battleBotDrive.drive(-10, 30);
+        break;
+
+    case NON_SENSOR:
+        updateSecondLCDCommand("No tape");
+        battleBotDrive.drive(-50, -35);
+        break;
+
+    default:
+        break;
+    }
+}
 void bluetoothCommandReceiver()
 {
     //runs the while if there is information to be received from the server.
@@ -434,8 +470,8 @@ void executeStoredCommand()
     {
         updateLCDCommand("game 1");
         //followLineProgram();
-        followLineProgram2();
-        //followLineProgram3();
+        //followLineProgram2();
+        followLineProgram3();
     }
     else if (commandString == "2")
     {
@@ -445,7 +481,8 @@ void executeStoredCommand()
     else if (commandString == "3")
     {
         updateLCDCommand("game 3");
-        avoidLineProgram();
+        //avoidLineProgram();
+        avoidLineProgram2();
     }
     else if (commandString == "5")
     {
