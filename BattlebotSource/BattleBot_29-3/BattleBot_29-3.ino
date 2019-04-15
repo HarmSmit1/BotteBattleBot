@@ -77,13 +77,13 @@ unsigned long previousMillisSendVelocity;  // This variable keeps track of the p
 unsigned long sendVelocityInterval = 3000; // This variable sets the interval of the velocity data that gets send over bluetouth.
 
 // variabelen voor autonoom rijden
-int timeForOneMeter;
-int startTimer = 0;
+long timeForOneMeter;
+long startTimer = 0;
 boolean endTimer = false;
 boolean start = false;
 boolean firstTime = true;
-
-int paardenraceTimer = 0;
+boolean coinFound = false;
+long paardenraceTimer = 0;
 
 /**
  * The initiation of of objects that are used to communicate with the battle bot's modules.
@@ -222,22 +222,22 @@ void followLineProgram()
     {
     case RIGHT_SENSOR:
         updateSecondLCDCommand("Tape right");
-        battleBotDrive.drive(-80, 40); //use 10 everywhere for perfect parkour
+        battleBotDrive.drive(-40, 80); //use 10 everywhere for perfect parkour
         break;
 
     case LEFT_SENSOR:
         updateSecondLCDCommand("Tape left");
-        battleBotDrive.drive(40, -80); //use 10 everywhere for perfect parkour
+        battleBotDrive.drive(80, -40); //use 10 everywhere for perfect parkour
         break;
 
-    case BOTH_SENSOR:
+    case BOTH_SENSOR:       
         updateSecondLCDCommand("Tape both");
         battleBotDrive.drive(0, 0);
         break;
 
     case NON_SENSOR:
         updateSecondLCDCommand("No tape");
-        battleBotDrive.drive(-80, -50);
+        battleBotDrive.drive(-80, -80);
         break;
 
     default:
@@ -385,9 +385,9 @@ void avoidLineProgram2()
     //count detections.
 
     int distance = sonar.ping_cm();
-    if (distance < 15 && distance != 0)
+    if (distance < 25 && distance != 0)
     {
-        if ((paardenraceTimer + 10000) <= millis())
+        if (millis() > (paardenraceTimer + 2000))
         {
             paardenraceTimer = millis();
             paardenRaceRondeCounter++;
@@ -397,9 +397,10 @@ void avoidLineProgram2()
         }
     }
 
-    if (paardenRaceRondeCounter >= 5)
+    if (paardenRaceRondeCounter > 4)
     {
-        commandString = "5";
+        commandString = "S";
+        paardenRaceRondeCounter = 0;
     }
 }
 void bluetoothCommandReceiver()
@@ -501,8 +502,7 @@ void executeStoredCommand()
     }
     else if (commandString == "S")
     {
-        updateLCDCommand("STOP");
-        battleBotDrive.drive(0, 0);
+        still();
     }
     else if (commandString == "1")
     {
@@ -525,9 +525,7 @@ void executeStoredCommand()
     }
     else if (commandString == "5")
     {
-        updateLCDCommand("STOP");
-        paardenRaceRondeCounter = 0;
-        battleBotDrive.drive(0, 0);
+        still();
     }
     else if (commandString == "y")
     { // van start naar lijnenrace
@@ -554,6 +552,67 @@ void executeStoredCommand()
 void schatZoeken()
 {
     //need to program
+    TapeDetected onSensor = detectTape();
+
+    if (!coinFound)
+    {
+        switch (onSensor)
+        {
+        case LEFT_SENSOR:
+            //coin found
+            coinFound = true;
+            break;
+
+        case RIGHT_SENSOR:
+            //coin found
+            coinFound = true;
+            break;
+
+        case BOTH_SENSOR:
+            //coin found
+            coinFound = true;
+            break;
+
+        case NON_SENSOR:
+            updateSecondLCDCommand("Coin found");
+            // stop driving
+            battleBotDrive.drive(0, 0);
+            coinFound = false;
+            break;
+
+        default:
+            break;
+        }
+
+        if (!coinFound)
+        {
+            battleBotDrive.drive(-100, -100);
+            int distance = sonar.ping_cm();
+            updateSecondLCDCommand("Searching coin");
+            //detect wall
+            if (distance < 15 && distance != 0)
+            {
+                //turn around
+                battleBotDrive.drive(100, 100);
+                delay(600);
+                battleBotDrive.drive(-100, 100);
+                delay(400);
+            }
+            else
+            {
+                //drive forward
+
+                //delay(100);
+            }
+        }
+    }
+    else
+    {
+        //stop driving
+        updateSecondLCDCommand("Coin found");
+        commandString = "5";
+        battleBotDrive.drive(-0, -0);
+    }
 }
 
 void vanSpelNaarSpel(int distance)
@@ -595,6 +654,14 @@ void still()
     endTimer = false;
     start = false;
     firstTime = true;
+
+    ///
+    updateLCDCommand("STOP");
+    paardenRaceRondeCounter = 0;
+    paardenraceTimer = millis();
+    coinFound = false;
+    battleBotDrive.drive(0, 0);
+    clearLcdLine(1);
 }
 
 /**
