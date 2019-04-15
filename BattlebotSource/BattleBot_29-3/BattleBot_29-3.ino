@@ -57,6 +57,7 @@ int incommingBluetouthCommand = 0; // Varialbe that stores the last bluetouth me
 int commandInt = 0;
 String commandString = "S";  // Variable that stores the program command extracted from the bluetouth message.
 String commandArgument = ""; // Variable that stores the program command argument extrated from the bluetouth message.
+int paardenRaceRondeCounter = 0;
 long currentDrivingSpeed = 0;
 int labyrintSplitCounter = 0;
 int domainTapeCounter = 0;
@@ -74,6 +75,15 @@ String debugMessage = "";         // Variable that stores the last available deb
 int maxPingDistance = 200;                 // The maximum distance the ultra echo sensor measures.
 unsigned long previousMillisSendVelocity;  // This variable keeps track of the previous velocity data transmission over bluetouth.
 unsigned long sendVelocityInterval = 3000; // This variable sets the interval of the velocity data that gets send over bluetouth.
+
+// variabelen voor autonoom rijden
+int timeForOneMeter;
+int startTimer = 0;
+boolean endTimer = false;
+boolean start = false;
+boolean firstTime = true;
+
+int paardenraceTimer = 0;
 
 /**
  * The initiation of of objects that are used to communicate with the battle bot's modules.
@@ -212,22 +222,22 @@ void followLineProgram()
     {
     case RIGHT_SENSOR:
         updateSecondLCDCommand("Tape right");
-        battleBotDrive.drive(-45, 30); //use 10 everywhere for perfect parkour
+        battleBotDrive.drive(-80, 40); //use 10 everywhere for perfect parkour
         break;
 
     case LEFT_SENSOR:
         updateSecondLCDCommand("Tape left");
-        battleBotDrive.drive(30, -45); //use 10 everywhere for perfect parkour
+        battleBotDrive.drive(40, -80); //use 10 everywhere for perfect parkour
         break;
 
     case BOTH_SENSOR:
         updateSecondLCDCommand("Tape both");
-        battleBotDrive.drive(30, -45);
+        battleBotDrive.drive(0, 0);
         break;
 
     case NON_SENSOR:
         updateSecondLCDCommand("No tape");
-        battleBotDrive.drive(-30, -30);
+        battleBotDrive.drive(-80, -50);
         break;
 
     default:
@@ -273,11 +283,19 @@ void followLineProgram3()
     {
     case RIGHT_SENSOR:
         updateSecondLCDCommand("Tape right");
-        battleBotDrive.drive(-10, 20); //use 10 everywhere for perfect parkour
+        //battleBotDrive.drive(-10, 20); //use 10 everywhere for perfect parkour
+        battleBotDrive.drive(-10, 25);
+        delay(100);
+        battleBotDrive.drive(-20, 50);
+        //delay(200);
         break;
     case LEFT_SENSOR:
         updateSecondLCDCommand("Tape left");
-        battleBotDrive.drive(20, -10); //use 10 everywhere for perfect parkour
+        // battleBotDrive.drive(20, -10); //use 10 everywhere for perfect parkour
+        battleBotDrive.drive(25, -10);
+        delay(100);
+        battleBotDrive.drive(50, -20);
+        //delay(200);
         break;
 
     case BOTH_SENSOR:
@@ -327,15 +345,15 @@ void avoidLineProgram()
         break;
     }
 }
+
 void avoidLineProgram2()
 {
-
     TapeDetected onSensor = detectTape();
 
     switch (onSensor)
     {
     case LEFT_SENSOR:
-        updateSecondLCDCommand("Tape left"); //so going right
+        //updateSecondLCDCommand("Tape left"); //so going right
         //battleBotDrive.drive(-5, 10);
         battleBotDrive.drive(20, 20);
         delay(200);
@@ -344,24 +362,44 @@ void avoidLineProgram2()
         break;
 
     case RIGHT_SENSOR:
-        updateSecondLCDCommand("Tape right"); //so going left
+        //updateSecondLCDCommand("Tape right"); //so going left
         battleBotDrive.drive(10, -5);
         break;
 
     case BOTH_SENSOR:
-        updateSecondLCDCommand("Tape both");
+        //updateSecondLCDCommand("Tape both");
         battleBotDrive.drive(20, 20);
         delay(300);
         battleBotDrive.drive(-10, 30);
         break;
 
     case NON_SENSOR:
-        updateSecondLCDCommand("No tape");
+        //updateSecondLCDCommand("No tape");
         battleBotDrive.drive(-50, -35);
         break;
 
     default:
         break;
+    }
+
+    //count detections.
+
+    int distance = sonar.ping_cm();
+    if (distance < 15 && distance != 0)
+    {
+        if ((paardenraceTimer + 10000) <= millis())
+        {
+            paardenraceTimer = millis();
+            paardenRaceRondeCounter++;
+
+            String outputDummyText = "Lap " + String(paardenRaceRondeCounter);
+            updateSecondLCDCommand(outputDummyText);
+        }
+    }
+
+    if (paardenRaceRondeCounter >= 5)
+    {
+        commandString = "5";
     }
 }
 void bluetoothCommandReceiver()
@@ -454,12 +492,12 @@ void executeStoredCommand()
     else if (commandString == "L")
     {
         updateLCDCommand("Driving left");
-        battleBotDrive.drive(10, -100);
+        battleBotDrive.drive(0, -driveSpeed);
     }
     else if (commandString == "R")
     {
         updateLCDCommand("Driving right");
-        battleBotDrive.drive(-100, 10);
+        battleBotDrive.drive(-driveSpeed, 0);
     }
     else if (commandString == "S")
     {
@@ -469,13 +507,14 @@ void executeStoredCommand()
     else if (commandString == "1")
     {
         updateLCDCommand("game 1");
-        //followLineProgram();
+        followLineProgram();
         //followLineProgram2();
-        followLineProgram3();
+        //followLineProgram3();
     }
     else if (commandString == "2")
     {
         updateLCDCommand("game 2");
+        schatZoeken();
         //schat zoeken
     }
     else if (commandString == "3")
@@ -487,12 +526,75 @@ void executeStoredCommand()
     else if (commandString == "5")
     {
         updateLCDCommand("STOP");
+        paardenRaceRondeCounter = 0;
         battleBotDrive.drive(0, 0);
+    }
+    else if (commandString == "y")
+    { // van start naar lijnenrace
+        vanSpelNaarSpel(4);
+    }
+    else if (commandString == "u")
+    { // van lijnenrace naar plakkaatzoeken
+        vanSpelNaarSpel(3);
+    }
+    else if (commandString == "i")
+    { // van plakkaatzoeken naar paarderace
+        vanSpelNaarSpel(4);
+    }
+    else if (commandString == "o")
+    { // van paardenrace naar parcours
+        vanSpelNaarSpel(11);
     }
     else
     {
         updateLCDCommand("Unknown command");
     }
+}
+
+void schatZoeken()
+{
+    //need to program
+}
+
+void vanSpelNaarSpel(int distance)
+{
+    TapeDetected onSensor = detectTape();
+
+    if (firstTime)
+    {
+        // beginnen met rijden
+        // BELANGRIJK: JE MOET ER ZELF VOOR ZORGEN DAT JE ROBOT RECHT VOORUIT RIJDT!!
+        battleBotDrive.drive(-100, -100);
+        // huidige tijd vastleggen
+        startTimer = millis();
+        firstTime = false;
+    }
+
+    // tijd meten die de robot over één meter doet
+    if (!endTimer && onSensor == BOTH_SENSOR)
+    {
+        timeForOneMeter = (millis() - startTimer); // timeForOneMeter is de tijd die de robot doet over één meter, in milliseconden
+        endTimer = true;                           // stop huidige loop
+        start = true;                              // start volgende loop
+    }
+
+    if (start)
+    {
+        int distanceToDrive = distance - 1;                    // de robot heeft al één meter gereden
+        int timeToDrive = (distanceToDrive * timeForOneMeter); // timeToDrive is de tijd in milliseconden die de robot moet rijden voor distanceToDrive
+        delay(timeToDrive);                                    // delay om robot voor een bepaalde tijd op te houden, dan rijd de bot voor een bepaalde tijd lang
+        still();
+        start = false;
+    }
+}
+
+void still()
+{
+    //variabelen voor het 'autonoom' rijden
+    startTimer = 0;
+    endTimer = false;
+    start = false;
+    firstTime = true;
 }
 
 /**
