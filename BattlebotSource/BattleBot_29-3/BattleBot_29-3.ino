@@ -219,11 +219,13 @@ void followLineProgram()
     {
     case RIGHT_SENSOR:
         updateSecondLCDText("Tape right");
+        battleBotDrive.drive(-20, 40);
         battleBotDrive.drive(-40, 80); 
         break;
 
     case LEFT_SENSOR:
         updateSecondLCDText("Tape left");
+        battleBotDrive.drive(40, -20);
         battleBotDrive.drive(80, -40); 
         break;
 
@@ -387,12 +389,12 @@ void executeStoredCommand()
     else if (commandString == "L")
     {
         updateLCDText("Driving left");
-        battleBotDrive.drive(0, -driveSpeed);
+        battleBotDrive.drive(0, -100);
     }
     else if (commandString == "R")
     {
         updateLCDText("Driving right");
-        battleBotDrive.drive(-driveSpeed, 0);
+        battleBotDrive.drive(-100, 0);
     }
     else if (commandString == "S")
     {
@@ -434,9 +436,7 @@ void executeStoredCommand()
         vanSpelNaarSpel(11);
     }
     else
-    {
-        clearLcdLine(0);
-        clearLcdLine(1);
+    {        
         updateLCDText("N.S.A.R.R");
         updateSecondLCDText("Awaiting input..");
     }
