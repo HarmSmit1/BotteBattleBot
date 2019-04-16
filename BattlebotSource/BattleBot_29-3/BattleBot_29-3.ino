@@ -21,8 +21,8 @@
 #define ultraEchoPin 12        // Input pin that is connected to the ultra echo sensor.
 #define ultraEchoTriggerPin 13 // Input pin that is connected to the trigger from the ultra echo sensor.
 
-#define bluetouthReceivePin A0  // The input pin for receiving bluetouth messages.
-#define bluetouthTransmitPin A1 // The output pin for transmitting bluetouth messages.
+#define bluetoothReceivePin A0  // The input pin for receiving bluetooth messages.
+#define bluetoothTransmitPin A1 // The output pin for transmitting bluetooth messages.
 
 #define lcdDisplayAddress 0x27 // The address of the LCD display
 #define lcdDisplayColumns 16   // The amount of characters each row of the display has.
@@ -53,10 +53,10 @@ enum TapeDetected
 /**
  * Declaration of variables that store the commands given to the battle bot.
  */
-int incommingBluetouthCommand = 0; // Varialbe that stores the last bluetouth message.
+int incommingbluetoothCommand = 0; // Varialbe that stores the last bluetooth message.
 int commandInt = 0;
-String commandString = "S";  // Variable that stores the program command extracted from the bluetouth message.
-String commandArgument = ""; // Variable that stores the program command argument extrated from the bluetouth message.
+String commandString = "";  // Variable that stores the program command extracted from the bluetooth message.
+String commandArgument = ""; // Variable that stores the program command argument extrated from the bluetooth message.
 int paardenRaceRondeCounter = 0;
 long currentDrivingSpeed = 0;
 int labyrintSplitCounter = 0;
@@ -65,16 +65,16 @@ int domainTapeCounter = 0;
 /**
  * Declaration of variables that store the messages that will get displayed on the LCD screen.
  */
-String lcdDisplayText = "";       // Variable used to store the last text that was printed on the first line lcd screen.
-String secondLcdDisplayText = ""; // Variable used to store the last text that was printed on the second line of the lcd screen.
-String debugMessage = "";         // Variable that stores the last available debug message.
+String lcdDisplayText = "";       
+String secondLcdDisplayText = ""; 
+String debugMessage = "";         
 
 /**
  * Declaration of variables that are needed to initate objects.
  */
-int maxPingDistance = 200;                 // The maximum distance the ultra echo sensor measures.
-unsigned long previousMillisSendVelocity;  // This variable keeps track of the previous velocity data transmission over bluetouth.
-unsigned long sendVelocityInterval = 3000; // This variable sets the interval of the velocity data that gets send over bluetouth.
+int maxPingDistance = 200;                 
+unsigned long previousMillisSendVelocity;  
+unsigned long sendVelocityInterval = 3000; 
 
 // variabelen voor autonoom rijden
 long timeForOneMeter;
@@ -88,8 +88,9 @@ long paardenraceTimer = 0;
 /**
  * The initiation of of objects that are used to communicate with the battle bot's modules.
  */
-// Create an new serial communication object for bluetouth communication.
-SoftwareSerial BTSerial(bluetouthReceivePin, bluetouthTransmitPin);
+
+// Create an new serial communication object for bluetooth communication.
+SoftwareSerial BTSerial(bluetoothReceivePin, bluetoothTransmitPin);
 
 // Create an new lcd object for displaying debugging messages on the battle bot.
 LiquidCrystal_I2C lcd(lcdDisplayAddress, lcdDisplayColumns, lcdDisplayRows);
@@ -102,6 +103,7 @@ MPU6050 accelgyro;
 
 // Create an new BattleBot object for controlling the battle bot.
 BattleBotDrive battleBotDrive(leftMotorForwardPin, rightMotorForwardPin, leftMotorBackwardPin, rightMotorBackwardPin);
+
 /**
  * Function to initialize the battleBot.
  */
@@ -122,20 +124,23 @@ void setup()
     // Start the LCD screen.
     lcd.begin();
     lcd.backlight();
-    lcd.print("Awaiting...");
-
+    updateLCDText("N.S.A.R.R");
+    updateSecondLCDText("Init bluetooth..");
+    delay(1000);
     Serial.begin(9600);
     while (!Serial)
     {
     }
-    BTSerial.begin(38400); // HC-05 default speed in AT command more
+
+    BTSerial.begin(38400);
     while (!BTSerial)
     {
     }
+    updateSecondLCDText("Awaiting input..");
 }
 
 /**
- * This method detects if the infrared sensors moved over some tape.
+ * Function for detecting tape on the ground.
  */
 TapeDetected detectTape()
 {
@@ -162,9 +167,7 @@ TapeDetected detectTape()
 }
 
 /**
- * This function will clear an line on the LCD screen by its line index number.
- *
- * @param the index of the line so on an 2X16 display either 0 for line 1 or 1 for line 2.
+ * Remove all text from specified line (0 or 1)
  */
 void clearLcdLine(int lineIndex)
 {
@@ -177,38 +180,32 @@ void clearLcdLine(int lineIndex)
 }
 
 /**
- * This method will print an message to the first line of the lcd screen if it is the same message it will not update it
- * so that the screen wont flicker when the same message is printed every milli second.
- *
- * @param currentCommand The last printed message to the lcd screen.
+ * Update first lcd line
  */
-void updateLCDCommand(String currentCommand)
+void updateLCDText(String ScreenText)
 {
-    if (lcdDisplayText != currentCommand)
+    if (lcdDisplayText != ScreenText)
     {
         clearLcdLine(0);
         lcd.setCursor(0, 0);
-        lcd.print(currentCommand);
-        lcdDisplayText = currentCommand;
-        Serial.println(currentCommand);
+        lcd.print(ScreenText);
+        lcdDisplayText = ScreenText;
+        Serial.println(ScreenText);
     }
 }
 
 /**
- * This method will print an message to the second line of the lcd screen if it is the same message it will not update it
- * so that the screen wont flikker when the same message is printed every milli second.
- *
- * @param currentCommand The last printed message to the lcd screen.
+ * Update second lcd line
  */
-void updateSecondLCDCommand(String secondCurrentCommand)
+void updateSecondLCDText(String secondScreenText)
 {
-    if (secondLcdDisplayText != secondCurrentCommand)
+    if (secondLcdDisplayText != secondScreenText)
     {
         clearLcdLine(1);
         lcd.setCursor(0, 1);
-        lcd.print(secondCurrentCommand);
-        secondLcdDisplayText = secondCurrentCommand;
-        Serial.println(secondCurrentCommand);
+        lcd.print(secondScreenText);
+        secondLcdDisplayText = secondScreenText;
+        Serial.println(secondScreenText);
     }
 }
 
@@ -221,53 +218,22 @@ void followLineProgram()
     switch (onSensor)
     {
     case RIGHT_SENSOR:
-        updateSecondLCDCommand("Tape right");
-        battleBotDrive.drive(-40, 80); //use 10 everywhere for perfect parkour
+        updateSecondLCDText("Tape right");
+        battleBotDrive.drive(-40, 80); 
         break;
 
     case LEFT_SENSOR:
-        updateSecondLCDCommand("Tape left");
-        battleBotDrive.drive(80, -40); //use 10 everywhere for perfect parkour
+        updateSecondLCDText("Tape left");
+        battleBotDrive.drive(80, -40); 
         break;
 
-    case BOTH_SENSOR:       
-        updateSecondLCDCommand("Tape both");
+    case BOTH_SENSOR:
+        updateSecondLCDText("Tape both");
         battleBotDrive.drive(0, 0);
         break;
 
     case NON_SENSOR:
-        updateSecondLCDCommand("No tape");
-        battleBotDrive.drive(-80, -80);
-        break;
-
-    default:
-        break;
-    }
-}
-void followLineProgram2()
-{
-
-    TapeDetected onSensor = detectTape();
-
-    switch (onSensor)
-    {
-    case RIGHT_SENSOR:
-        updateSecondLCDCommand("Tape right");
-        battleBotDrive.drive(-20, 50); //use 10 everywhere for perfect parkour
-        break;
-
-    case LEFT_SENSOR:
-        updateSecondLCDCommand("Tape left");
-        battleBotDrive.drive(50, -20); //use 10 everywhere for perfect parkour
-        break;
-
-    case BOTH_SENSOR:
-        updateSecondLCDCommand("Tape both");
-        battleBotDrive.drive(-40, -40);
-        break;
-
-    case NON_SENSOR:
-        updateSecondLCDCommand("No tape");
+        updateSecondLCDText("No tape");
         battleBotDrive.drive(-40, -40);
         break;
 
@@ -275,86 +241,17 @@ void followLineProgram2()
         break;
     }
 }
-void followLineProgram3()
-{
-    TapeDetected onSensor = detectTape();
 
-    switch (onSensor)
-    {
-    case RIGHT_SENSOR:
-        updateSecondLCDCommand("Tape right");
-        //battleBotDrive.drive(-10, 20); //use 10 everywhere for perfect parkour
-        battleBotDrive.drive(-10, 25);
-        delay(100);
-        battleBotDrive.drive(-20, 50);
-        //delay(200);
-        break;
-    case LEFT_SENSOR:
-        updateSecondLCDCommand("Tape left");
-        // battleBotDrive.drive(20, -10); //use 10 everywhere for perfect parkour
-        battleBotDrive.drive(25, -10);
-        delay(100);
-        battleBotDrive.drive(50, -20);
-        //delay(200);
-        break;
-
-    case BOTH_SENSOR:
-        updateSecondLCDCommand("Tape both");
-        battleBotDrive.drive(-50, -50);
-        break;
-
-    case NON_SENSOR:
-        updateSecondLCDCommand("No tape");
-        battleBotDrive.drive(-50, -50);
-        break;
-
-    default:
-        break;
-    }
-}
 /**
- * This function lets the bot avoid the tape on the ground
+ * let the bot drive in between the 2 lines on the ground
  */
 void avoidLineProgram()
 {
     TapeDetected onSensor = detectTape();
-    switch (onSensor)
-    {
-    case LEFT_SENSOR:
-        updateSecondLCDCommand("Tape left");
-        battleBotDrive.drive(-70, 40);
-        break;
-    case RIGHT_SENSOR:
-        updateSecondLCDCommand("Tape right");
-        battleBotDrive.drive(30, -70);
-        break;
-
-    case BOTH_SENSOR:
-        updateSecondLCDCommand("Tape both");
-        battleBotDrive.drive(40, 40); //backwards and turn around
-        delay(200);
-        battleBotDrive.drive(-40, 40);
-        break;
-
-    case NON_SENSOR:
-        updateSecondLCDCommand("No tape");
-        battleBotDrive.drive(-40, -40);
-        break;
-
-    default:
-        break;
-    }
-}
-
-void avoidLineProgram2()
-{
-    TapeDetected onSensor = detectTape();
 
     switch (onSensor)
     {
     case LEFT_SENSOR:
-        //updateSecondLCDCommand("Tape left"); //so going right
-        //battleBotDrive.drive(-5, 10);
         battleBotDrive.drive(20, 20);
         delay(200);
         battleBotDrive.drive(-20, 40);
@@ -362,19 +259,16 @@ void avoidLineProgram2()
         break;
 
     case RIGHT_SENSOR:
-        //updateSecondLCDCommand("Tape right"); //so going left
         battleBotDrive.drive(10, -5);
         break;
 
     case BOTH_SENSOR:
-        //updateSecondLCDCommand("Tape both");
         battleBotDrive.drive(20, 20);
         delay(300);
         battleBotDrive.drive(-10, 30);
         break;
 
     case NON_SENSOR:
-        //updateSecondLCDCommand("No tape");
         battleBotDrive.drive(-50, -35);
         break;
 
@@ -382,8 +276,7 @@ void avoidLineProgram2()
         break;
     }
 
-    //count detections.
-
+    //count laps.
     int distance = sonar.ping_cm();
     if (distance < 25 && distance != 0)
     {
@@ -393,19 +286,22 @@ void avoidLineProgram2()
             paardenRaceRondeCounter++;
 
             String outputDummyText = "Lap " + String(paardenRaceRondeCounter);
-            updateSecondLCDCommand(outputDummyText);
+            updateSecondLCDText(outputDummyText);
         }
     }
 
     if (paardenRaceRondeCounter > 4)
     {
-        commandString = "S";
+        commandString = "S"; //to stop the bot from continueing the current game.
         paardenRaceRondeCounter = 0;
     }
 }
-void bluetoothCommandReceiver()
+
+/**
+ * started from the loop() function, checks for available bluetooth commands.
+ */
+void receiveAndStoreCommand()
 {
-    //runs the while if there is information to be received from the server.
     while (BTSerial.available())
     {
         char incoming = (BTSerial.read());
@@ -453,51 +349,49 @@ void bluetoothCommandReceiver()
         case '5':
             commandString = "5";
             break;
+        case 'y':
+            commandString = "5";
+            break;
+        case 'u':
+            commandString = "5";
+            break;
+        case 'i':
+            commandString = "5";
+            break;
+        case 'o':
+            commandString = "5";
+            break;
         default:
             break;
         }
     }
 }
-/*
-TODO: make this the main function for letting the bot drive, then implement the anti collision stuff.
-*/
-void driveAndAvoid(int leftSpeed, int rightSpeed, bool enable)
-{
-    if (enable)
-    {
-        //stop if obstacles are detected.
-        if (sonar.ping_cm() < 15)
-        {
-        }
-    }
-    else
-    {
-        //do not detect collision
-    }
-}
 
+/**
+ * started from the loop() function, executes the currently stored command.
+ */
 void executeStoredCommand()
 {
-    int driveSpeed = 100;
+    int driveSpeed = 200;
 
     if (commandString == "F")
     {
-        updateLCDCommand("Driving forward");
-        battleBotDrive.drive(-driveSpeed, -driveSpeed);
+        updateLCDText("Driving forward");
+        forward();
     }
     else if (commandString == "B")
     {
-        updateLCDCommand("Driving backward");
+        updateLCDText("Driving backward");
         battleBotDrive.drive(driveSpeed, driveSpeed);
     }
     else if (commandString == "L")
     {
-        updateLCDCommand("Driving left");
+        updateLCDText("Driving left");
         battleBotDrive.drive(0, -driveSpeed);
     }
     else if (commandString == "R")
     {
-        updateLCDCommand("Driving right");
+        updateLCDText("Driving right");
         battleBotDrive.drive(-driveSpeed, 0);
     }
     else if (commandString == "S")
@@ -506,22 +400,18 @@ void executeStoredCommand()
     }
     else if (commandString == "1")
     {
-        updateLCDCommand("game 1");
+        updateLCDText("game 1");
         followLineProgram();
-        //followLineProgram2();
-        //followLineProgram3();
     }
     else if (commandString == "2")
     {
-        updateLCDCommand("game 2");
+        updateLCDText("game 2");
         schatZoeken();
-        //schat zoeken
     }
     else if (commandString == "3")
     {
-        updateLCDCommand("game 3");
-        //avoidLineProgram();
-        avoidLineProgram2();
+        updateLCDText("game 3");
+        avoidLineProgram();
     }
     else if (commandString == "5")
     {
@@ -545,7 +435,10 @@ void executeStoredCommand()
     }
     else
     {
-        updateLCDCommand("Unknown command");
+        clearLcdLine(0);
+        clearLcdLine(1);
+        updateLCDText("N.S.A.R.R");
+        updateSecondLCDText("Awaiting input..");
     }
 }
 
@@ -574,7 +467,7 @@ void schatZoeken()
             break;
 
         case NON_SENSOR:
-            updateSecondLCDCommand("Coin found");
+            updateSecondLCDText("Coin found");
             // stop driving
             battleBotDrive.drive(0, 0);
             coinFound = false;
@@ -588,7 +481,7 @@ void schatZoeken()
         {
             battleBotDrive.drive(-100, -100);
             int distance = sonar.ping_cm();
-            updateSecondLCDCommand("Searching coin");
+            updateSecondLCDText("Searching coin");
             //detect wall
             if (distance < 15 && distance != 0)
             {
@@ -609,7 +502,7 @@ void schatZoeken()
     else
     {
         //stop driving
-        updateSecondLCDCommand("Coin found");
+        updateSecondLCDText("Coin found");
         commandString = "5";
         battleBotDrive.drive(-0, -0);
     }
@@ -623,7 +516,7 @@ void vanSpelNaarSpel(int distance)
     {
         // beginnen met rijden
         // BELANGRIJK: JE MOET ER ZELF VOOR ZORGEN DAT JE ROBOT RECHT VOORUIT RIJDT!!
-        battleBotDrive.drive(-100, -100);
+        forward();
         // huidige tijd vastleggen
         startTimer = millis();
         firstTime = false;
@@ -655,8 +548,8 @@ void still()
     start = false;
     firstTime = true;
 
-    ///
-    updateLCDCommand("STOP");
+    //vars for the other games to reset if called.
+    updateLCDText("STOP");
     paardenRaceRondeCounter = 0;
     paardenraceTimer = millis();
     coinFound = false;
@@ -664,11 +557,41 @@ void still()
     clearLcdLine(1);
 }
 
+//calibrated forward driving.
+void forward()
+{
+    battleBotDrive.drive(-200, -170);
+}
+
+/*
+TODO: make this the main function for letting the bot drive, then implement the anti collision stuff.
+*/
+void driveAndAvoid(int leftSpeed, int rightSpeed, bool enable)
+{
+    if (enable)
+    {
+        //stop if obstacles are detected.
+        if (sonar.ping_cm() < 15)
+        {
+            battleBotDrive.drive(0, 0);
+        }
+        else
+        {
+            battleBotDrive.drive(leftSpeed, rightSpeed);
+        }
+    }
+    else
+    {
+        //do not detect collision
+        battleBotDrive.drive(leftSpeed, rightSpeed);
+    }
+}
+
 /**
  * This is the main function of the battle bot it will listen for incoming commands and execute it.
  */
 void loop()
 {
-    bluetoothCommandReceiver();
+    receiveAndStoreCommand();
     executeStoredCommand();
 }
