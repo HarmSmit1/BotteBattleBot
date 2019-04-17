@@ -219,13 +219,13 @@ void followLineProgram()
     {
     case RIGHT_SENSOR:
         updateSecondLCDText("Tape right");
-        battleBotDrive.drive(-20, 40);
+        battleBotDrive.drive(-10, 30);
         battleBotDrive.drive(-40, 80); 
         break;
 
     case LEFT_SENSOR:
         updateSecondLCDText("Tape left");
-        battleBotDrive.drive(40, -20);
+        battleBotDrive.drive(30, -10);
         battleBotDrive.drive(80, -40); 
         break;
 
@@ -292,7 +292,7 @@ void avoidLineProgram()
         }
     }
 
-    if (paardenRaceRondeCounter > 4)
+    if (paardenRaceRondeCounter >= 3)
     {
         commandString = "S"; //to stop the bot from continueing the current game.
         paardenRaceRondeCounter = 0;
@@ -533,7 +533,7 @@ void vanSpelNaarSpel(int distance)
     if (start)
     {
         int distanceToDrive = distance - 1;                    // de robot heeft al één meter gereden
-        int timeToDrive = (distanceToDrive * timeForOneMeter); // timeToDrive is de tijd in milliseconden die de robot moet rijden voor distanceToDrive
+        long timeToDrive = (distanceToDrive * timeForOneMeter); // timeToDrive is de tijd in milliseconden die de robot moet rijden voor distanceToDrive
         delay(timeToDrive);                                    // delay om robot voor een bepaalde tijd op te houden, dan rijd de bot voor een bepaalde tijd lang
         still();
         start = false;
